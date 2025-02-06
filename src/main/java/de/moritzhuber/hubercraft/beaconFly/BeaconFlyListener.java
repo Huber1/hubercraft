@@ -3,6 +3,7 @@ package de.moritzhuber.hubercraft.beaconFly;
 
 import de.moritzhuber.hubercraft.Tuple;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Beacon;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,7 +19,7 @@ public class BeaconFlyListener implements Listener {
         Player p = event.getPlayer();
 
         Location location = p.getLocation();
-        location.setY(Math.ceil(location.getY())); // ceilto account for semi-height blocks
+        location.setY(Math.ceil(location.getY())); // ceil to account for semi-height blocks
 
         for (int i = 1; i <= 2; i++) {
             // for Some reason location.subtract() doesn't work
@@ -29,6 +30,9 @@ public class BeaconFlyListener implements Listener {
                 int tier = beacon.getTier();
 
                 if (tier < 1) return;
+                // Only work if elytra is equipped
+                if (p.getInventory().getChestplate() == null || p.getInventory().getChestplate().getType() != Material.ELYTRA)
+                    return;
 
                 giveEffect(p, tier);
                 return;
