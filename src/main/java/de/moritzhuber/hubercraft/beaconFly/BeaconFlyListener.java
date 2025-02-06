@@ -18,8 +18,12 @@ public class BeaconFlyListener implements Listener {
         Player p = event.getPlayer();
 
         Location location = p.getLocation();
-        for (int i = 0; i < 3; i++) {
-            Block block = location.subtract(0, i, 0).getBlock();
+        location.setY(Math.ceil(location.getY())); // ceilto account for semi-height blocks
+
+        for (int i = 1; i <= 2; i++) {
+            // for Some reason location.subtract() doesn't work
+            Location location1 = new Location(location.getWorld(), location.getX(), location.getY() - i, location.getZ());
+            Block block = location1.getBlock();
             if (block.getState() instanceof Beacon) {
                 Beacon beacon = (Beacon) block.getState();
                 int tier = beacon.getTier();
@@ -44,8 +48,7 @@ public class BeaconFlyListener implements Listener {
 
         if (stats == null) return;
 
-        if (p.hasPotionEffect(PotionEffectType.LEVITATION))
-            p.removePotionEffect(PotionEffectType.LEVITATION);
+        if (p.hasPotionEffect(PotionEffectType.LEVITATION)) p.removePotionEffect(PotionEffectType.LEVITATION);
 
         PotionEffect levitation = new PotionEffect(PotionEffectType.LEVITATION, 20 * stats.$1, stats.$2, false, false);
         p.addPotionEffect(levitation);
