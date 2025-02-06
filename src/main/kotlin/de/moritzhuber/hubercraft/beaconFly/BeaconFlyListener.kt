@@ -1,60 +1,58 @@
-package de.moritzhuber.hubercraft.beaconFly;
+package de.moritzhuber.hubercraft.beaconFly
 
+import org.bukkit.Location
+import org.bukkit.Material
+import org.bukkit.block.Beacon
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerMoveEvent
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
+import kotlin.math.ceil
 
-import de.moritzhuber.hubercraft.Tuple;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Beacon;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-
-public class BeaconFlyListener implements Listener {
+class BeaconFlyListener : Listener {
     @EventHandler
-    public void onPlayerMovement(final PlayerMoveEvent event) {
-        Player p = event.getPlayer();
+    fun onPlayerMovement(event: PlayerMoveEvent) {
+        val p = event.player
 
-        Location location = p.getLocation();
-        location.setY(Math.ceil(location.getY())); // ceil to account for semi-height blocks
+        val location = p.location
+        location.y = ceil(location.y) // ceil to account for semi-height blocks
 
-        for (int i = 1; i <= 2; i++) {
+        for (i in 1..2) {
             // for Some reason location.subtract() doesn't work
-            Location location1 = new Location(location.getWorld(), location.getX(), location.getY() - i, location.getZ());
-            Block block = location1.getBlock();
-            if (block.getState() instanceof Beacon) {
-                Beacon beacon = (Beacon) block.getState();
-                int tier = beacon.getTier();
+            val location1 = Location(location.world, location.x, location.y - i, location.z)
+            val block = location1.block
+            if (block.state is Beacon) {
+                val beacon = block.state as Beacon
+                val tier = beacon.tier
 
-                if (tier < 1) return;
+                if (tier < 1) return
+
                 // Only work if elytra is equipped
-                if (p.getInventory().getChestplate() == null || p.getInventory().getChestplate().getType() != Material.ELYTRA)
-                    return;
+                if (p.inventory.chestplate == null || p.inventory.chestplate!!.type != Material.ELYTRA) return
 
-                giveEffect(p, tier);
-                return;
+                giveEffect(p, tier)
+                return
             }
         }
     }
 
-    private void giveEffect(Player p, int tier) {
+    private fun giveEffect(p: Player, tier: Int) {
         // Seconds, Amplifier
-        Tuple<Integer, Integer> stats = switch (tier) {
-            case 1 -> new Tuple<>(5, 5);
-            case 2 -> new Tuple<>(5, 10);
-            case 3 -> new Tuple<>(5, 15);
-            case 4 -> new Tuple<>(5, 28);
-            default -> null;
-        };
+        val stats = when (tier) {
+            1 -> Pair(5, 5)
+            2 -> Pair(5, 10)
+            3 -> Pair(5, 15)
+            4 -> Pair(5, 28)
+            else -> null
+        }
 
-        if (stats == null) return;
+        if (stats == null) return
 
-        if (p.hasPotionEffect(PotionEffectType.LEVITATION)) p.removePotionEffect(PotionEffectType.LEVITATION);
+        if (p.hasPotionEffect(PotionEffectType.LEVITATION)) p.removePotionEffect(PotionEffectType.LEVITATION)
 
-        PotionEffect levitation = new PotionEffect(PotionEffectType.LEVITATION, 20 * stats.$1, stats.$2, false, false);
-        p.addPotionEffect(levitation);
+        val levitation = PotionEffect(PotionEffectType.LEVITATION, 20 * stats.first, stats.second, false, false)
+        p.addPotionEffect(levitation)
     }
 }
