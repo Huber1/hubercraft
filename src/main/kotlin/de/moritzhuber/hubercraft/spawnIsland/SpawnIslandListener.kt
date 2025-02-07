@@ -31,6 +31,8 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
     private val chestPlateData = mutableMapOf<UUID, ItemStack?>()
 
+    private val preventLevitateAchievementPlayers = mutableListOf<UUID>()
+
     @EventHandler
     fun onAdvancement(event: PlayerAdvancementCriterionGrantEvent) {
         val p = event.player
@@ -38,18 +40,24 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         p.sendMessage("CRITERION: ${event.criterion}")
         p.sendMessage("ADVANCEMENT: ${event.advancement.key}")
 
-        if (event.advancement.key != NamespacedKey.minecraft("end/elytra")) return
+        if (event.criterion !in listOf("levitated", "elytra")) return
 
-        p.sendMessage("CORRECT KEY")
+        when (event.criterion) {
+            "levitated" -> {
+                if (preventLevitateAchievementPlayers.contains(p.uniqueId))
+                    event.isCancelled = true
+                p.sendMessage("CANCELLED ${event.criterion}")
+            }
 
-        val chestplate = p.inventory.chestplate
+            "elytra" -> {
+                val chestplate = p.inventory.chestplate
 
-        if (chestplate?.isEmpty == false) {
-            p.sendMessage("CHESTPLATE NOT EMPTY")
-            p.sendMessage(chestplate.itemMeta.itemName().toString())
-            if ((chestplate.itemMeta.itemName() as TextComponent).content() == ITEM_NAME) {
-                p.sendMessage("CANCEL EVENT")
-                event.isCancelled = true
+                if (chestplate?.isEmpty == false) {
+                    if ((chestplate.itemMeta.itemName() as TextComponent).content() == ITEM_NAME) {
+                        p.sendMessage("CANCELLED ${event.criterion}")
+                        event.isCancelled = true
+                    }
+                }
             }
         }
     }
@@ -76,7 +84,11 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     }
 
     @EventHandler
-    fun onDeath(event: PlayerDeathEvent) = removeElytra(event.player)
+    fun onDeath(event: PlayerDeathEvent) {
+        val p = event.player
+        preventLevitateAchievementPlayers.remove(p.uniqueId)
+        removeElytra(p)
+    }
 
     private fun giveElytra(p: Player) {
         val chestPlate = p.inventory.chestplate
@@ -122,6 +134,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         p.removePotionEffect(PotionEffectType.LEVITATION)
         val levitation = PotionEffect(PotionEffectType.LEVITATION, 20 * 5, 25, false, false)
         p.addPotionEffect(levitation)
+        preventLevitateAchievementPlayers.add(p.uniqueId)
 
         val scheduler = plugin.server.scheduler
         scheduler.runTaskLater(plugin, Runnable {
@@ -129,6 +142,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
             p.teleport(ISLAND_LOCATION.apply {
                 direction = p.location.direction
             })
+            preventLevitateAchievementPlayers.remove(p.uniqueId)
         }, BOTTOM_LEVITATE_DURATION)
     }
 }
