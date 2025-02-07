@@ -1,4 +1,4 @@
-package de.moritzhuber.hubercraft.spawnElytra
+package de.moritzhuber.hubercraft.spawnIsland
 
 import com.destroystokyo.paper.event.player.PlayerAdvancementCriterionGrantEvent
 import net.kyori.adventure.text.Component
@@ -14,13 +14,20 @@ import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.potion.PotionEffect
+import org.bukkit.potion.PotionEffectType
 import java.util.*
 
-class SpawnElytraListener : Listener {
-    val ITEM_NAME: String = "Einwegelytra"
+class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
+    private val ITEM_NAME: String = "Einwegelytra"
 
-    val LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 175.0, 0.0)
-    val DISTANCE = 6
+    private val ISLAND_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 175.0, 0.0)
+    private val ISLAND_ELYTRA_DISTANCE = 6
+
+    private val BOTTOM_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 68.0, 0.0)
+    private val BOTTOM_LEVITATE_DISTANCE = 0.5
+    private val BOTTOM_LEVITATE_DURATION = 95L // 4.75 seconds
 
     private val chestPlateData = mutableMapOf<UUID, ItemStack?>()
 
@@ -51,9 +58,11 @@ class SpawnElytraListener : Listener {
     fun onPlayerMove(event: PlayerMoveEvent) {
         val p = event.player
 
-        if (LOCATION.world.key == p.location.world.key && LOCATION.distance(p.location) < DISTANCE) {
-            giveElytra(p)
-        }
+        if (ISLAND_LOCATION.world.key != p.world.key) return
+
+        if (BOTTOM_LOCATION.distance(p.location) < BOTTOM_LEVITATE_DISTANCE) levitateToIsland(p)
+        else if (ISLAND_LOCATION.distance(p.location) < ISLAND_ELYTRA_DISTANCE) giveElytra(p)
+
     }
 
     @EventHandler
@@ -107,5 +116,19 @@ class SpawnElytraListener : Listener {
         elytra.itemMeta = meta
 
         return elytra
+    }
+
+    private fun levitateToIsland(p: Player) {
+        p.removePotionEffect(PotionEffectType.LEVITATION)
+        val levitation = PotionEffect(PotionEffectType.LEVITATION, 20 * 5, 25, false, false)
+        p.addPotionEffect(levitation)
+
+        val scheduler = plugin.server.scheduler
+        scheduler.runTaskLater(plugin, Runnable {
+            p.removePotionEffect(PotionEffectType.LEVITATION)
+            p.teleport(ISLAND_LOCATION.apply {
+                direction = p.location.direction
+            })
+        }, BOTTOM_LEVITATE_DURATION)
     }
 }

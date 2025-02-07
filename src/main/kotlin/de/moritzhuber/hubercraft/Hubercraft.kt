@@ -1,7 +1,7 @@
 package de.moritzhuber.hubercraft
 
 import de.moritzhuber.hubercraft.beaconFly.BeaconFlyListener
-import de.moritzhuber.hubercraft.spawnElytra.SpawnElytraListener
+import de.moritzhuber.hubercraft.spawnIsland.SpawnIslandListener
 import org.bukkit.plugin.java.JavaPlugin
 
 class Hubercraft : JavaPlugin() {
@@ -9,7 +9,7 @@ class Hubercraft : JavaPlugin() {
         // Plugin startup logic
         val pluginManager = server.pluginManager
         pluginManager.registerEvents(BeaconFlyListener(), this)
-        pluginManager.registerEvents(SpawnElytraListener(), this)
+        pluginManager.registerEvents(SpawnIslandListener(this), this)
     }
 
     override fun onDisable() {
