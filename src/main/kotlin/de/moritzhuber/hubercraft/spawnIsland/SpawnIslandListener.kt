@@ -27,9 +27,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
     private val BOTTOM_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 68.0, 0.0)
     private val BOTTOM_LEVITATE_DISTANCE = 0.5
-    private val BOTTOM_LEVITATE_DURATION = 95L // 4.75 seconds
-
-    private val chestPlateData = mutableMapOf<UUID, ItemStack?>()
+    private val BOTTOM_LEVITATE_DURATION = 93L // 4.75 seconds
 
     private val preventLevitateAchievementPlayers = mutableListOf<UUID>()
 
@@ -94,9 +92,9 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val chestPlate = p.inventory.chestplate
 
         // Check if SpawnElytra is already given
-        if (chestPlateData.containsKey(p.uniqueId)) return
+        if (SavedChestplates.has(p.uniqueId)) return
 
-        chestPlateData[p.uniqueId] = chestPlate
+        SavedChestplates.save(p.uniqueId, chestPlate)
 
         p.inventory.chestplate = getElytra()
         p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
@@ -106,11 +104,11 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val chestPlate = p.inventory.chestplate
         if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) return
 
-        val previous = chestPlateData[p.uniqueId]
+        val previous = SavedChestplates.get(p.uniqueId)
 
         p.inventory.chestplate = previous
         p.playSound(p, Sound.BLOCK_BEACON_DEACTIVATE, 1.0F, 2.0F)
-        chestPlateData.remove(p.uniqueId)
+        SavedChestplates.remove(p.uniqueId)
     }
 
     private fun getElytra(): ItemStack {
