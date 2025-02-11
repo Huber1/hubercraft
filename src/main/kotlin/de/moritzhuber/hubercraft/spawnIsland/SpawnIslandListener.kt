@@ -35,15 +35,11 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     fun onAdvancement(event: PlayerAdvancementCriterionGrantEvent) {
         val p = event.player
 
-        p.sendMessage("CRITERION: ${event.criterion}")
-        p.sendMessage("ADVANCEMENT: ${event.advancement.key}")
-
         if (event.criterion !in listOf("levitated", "elytra")) return
 
         when (event.criterion) {
             "levitated" -> {
                 if (preventLevitateAchievementPlayers.contains(p.uniqueId)) event.isCancelled = true
-                p.sendMessage("CANCELLED ${event.criterion}")
             }
 
             "elytra" -> {
@@ -51,7 +47,6 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
                 if (chestplate?.isEmpty == false) {
                     if ((chestplate.itemMeta.itemName() as TextComponent).content() == ITEM_NAME) {
-                        p.sendMessage("CANCELLED ${event.criterion}")
                         event.isCancelled = true
                     }
                 }
