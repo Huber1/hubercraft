@@ -22,10 +22,10 @@ import java.util.*
 class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     private val ITEM_NAME: String = "Einwegelytra"
 
-    private val ISLAND_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 175.0, 0.0)
+    private val ISLAND_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 175.0, 0.5)
     private val ISLAND_ELYTRA_DISTANCE = 6
 
-    private val BOTTOM_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 68.0, 0.0)
+    private val BOTTOM_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 68.0, 0.5)
     private val BOTTOM_LEVITATE_DISTANCE = 0.5
     private val BOTTOM_LEVITATE_DURATION = 93L // 4.75 seconds
 
