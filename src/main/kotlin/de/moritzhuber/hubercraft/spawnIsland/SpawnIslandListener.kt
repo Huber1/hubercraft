@@ -35,16 +35,11 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     fun onAdvancement(event: PlayerAdvancementCriterionGrantEvent) {
         val p = event.player
 
-        p.sendMessage("CRITERION: ${event.criterion}")
-        p.sendMessage("ADVANCEMENT: ${event.advancement.key}")
-
         if (event.criterion !in listOf("levitated", "elytra")) return
 
         when (event.criterion) {
             "levitated" -> {
-                if (preventLevitateAchievementPlayers.contains(p.uniqueId))
-                    event.isCancelled = true
-                p.sendMessage("CANCELLED ${event.criterion}")
+                if (preventLevitateAchievementPlayers.contains(p.uniqueId)) event.isCancelled = true
             }
 
             "elytra" -> {
@@ -52,7 +47,6 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
                 if (chestplate?.isEmpty == false) {
                     if ((chestplate.itemMeta.itemName() as TextComponent).content() == ITEM_NAME) {
-                        p.sendMessage("CANCELLED ${event.criterion}")
                         event.isCancelled = true
                     }
                 }
@@ -92,23 +86,24 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val chestPlate = p.inventory.chestplate
 
         // Check if SpawnElytra is already given
-        if (SavedChestplates.has(p.uniqueId)) return
-
-        SavedChestplates.save(p.uniqueId, chestPlate)
-
-        p.inventory.chestplate = getElytra()
-        p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
+        if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) {
+            if (chestPlate == null) p.inventory.chestplate = getElytra()
+            else {
+                SavedChestplates.save(p.uniqueId, ItemStack(chestPlate))
+                p.inventory.chestplate = getElytra()
+            }
+            p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
+        }
     }
 
     private fun removeElytra(p: Player) {
         val chestPlate = p.inventory.chestplate
         if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) return
 
-        val previous = SavedChestplates.get(p.uniqueId)
+        val previous = SavedChestplates.remove(p.uniqueId)
 
         p.inventory.chestplate = previous
         p.playSound(p, Sound.BLOCK_BEACON_DEACTIVATE, 1.0F, 2.0F)
-        SavedChestplates.remove(p.uniqueId)
     }
 
     private fun getElytra(): ItemStack {
