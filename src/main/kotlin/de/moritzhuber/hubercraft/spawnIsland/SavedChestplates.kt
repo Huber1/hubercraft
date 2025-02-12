@@ -44,6 +44,7 @@ object SavedChestplates {
 
     fun loadFromDisk() {
         if (file.exists()) {
+            @Suppress("UNCHECKED_CAST")
             val deserialized = ObjectInputStream(file.inputStream()).use { it.readObject() as Map<UUID, ByteArray?> }
             chestPlateData = deserialized.mapValues {
                 if (it.value != null) ItemStack.deserializeBytes(it.value!!)
