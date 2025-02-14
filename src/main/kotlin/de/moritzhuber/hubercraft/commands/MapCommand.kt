@@ -1,5 +1,6 @@
-package de.moritzhuber.hubercraft.commands
+@file:Suppress("UnstableApiUsage")
 
+package de.moritzhuber.hubercraft.commands
 
 import com.mojang.brigadier.Command
 import com.mojang.brigadier.arguments.StringArgumentType

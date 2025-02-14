@@ -16,6 +16,7 @@ class Hubercraft : JavaPlugin() {
         pluginManager.registerEvents(BeaconFlyListener(), this)
         pluginManager.registerEvents(SpawnIslandListener(this), this)
 
+        @Suppress("UnstableApiUsage")
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
             commands.registrar().register(mapCommand())
         }
