@@ -26,7 +26,7 @@ fun mapCommand(): LiteralCommandNode<CommandSourceStack> {
         .requires { it.sender.hasPermission("hubercraft.map") }
         .then(
             Commands.argument("world", StringArgumentType.word())
-                .suggests { ctx, builder ->
+                .suggests { _, builder ->
                     WorldType.entries.forEach { builder.suggest(it.name) }
 
                     builder.buildFuture()
@@ -35,10 +35,7 @@ fun mapCommand(): LiteralCommandNode<CommandSourceStack> {
                     val world = StringArgumentType.getString(ctx, "world")
 
                     if (WorldType.entries.none { it.name == world }) {
-                        ctx.source.sender.sendMessage(
-                            Component.text("<world> must be one of ", NamedTextColor.GOLD)
-                                .append(Component.text(WorldType.entries.joinToString(", "), NamedTextColor.RED))
-                        )
+                        ctx.source.sender.sendMessage(Component.text("Karte existiert nicht", NamedTextColor.GOLD))
                         return@executes Command.SINGLE_SUCCESS
                     }
 
