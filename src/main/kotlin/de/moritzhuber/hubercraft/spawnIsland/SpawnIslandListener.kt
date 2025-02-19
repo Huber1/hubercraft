@@ -110,7 +110,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val elytra = ItemStack(Material.ELYTRA)
         val meta = elytra.itemMeta
 
-        meta.displayName(Component.text("DisplayName"))
+        meta.displayName(Component.text(ITEM_NAME))
         meta.isUnbreakable = true
         meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
         meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
