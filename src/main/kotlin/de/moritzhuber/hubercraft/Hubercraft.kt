@@ -12,6 +12,7 @@ class Hubercraft : JavaPlugin() {
     private lateinit var spawnIslandListener: SpawnIslandListener
 
     override fun onEnable() {
+        logger.info("Starting up")
         spawnIslandListener = SpawnIslandListener(this)
 
         registerEvents()
@@ -32,6 +33,7 @@ class Hubercraft : JavaPlugin() {
     }
 
     override fun onDisable() = runBlocking {
+        logger.info("Shutting down")
         spawnIslandListener.savedChestplates.persistToDisk()
     }
 }
