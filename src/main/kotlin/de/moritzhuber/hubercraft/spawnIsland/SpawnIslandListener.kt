@@ -31,6 +31,8 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
     private val preventLevitateAchievementPlayers = mutableListOf<UUID>()
 
+    val savedChestplates = SavedChestplates()
+
     @EventHandler
     fun onAdvancement(event: PlayerAdvancementCriterionGrantEvent) {
         val p = event.player
@@ -89,7 +91,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) {
             if (chestPlate == null) p.inventory.chestplate = getElytra()
             else {
-                SavedChestplates.save(p.uniqueId, ItemStack(chestPlate))
+                savedChestplates.save(p.uniqueId, ItemStack(chestPlate))
                 p.inventory.chestplate = getElytra()
             }
             p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
@@ -100,7 +102,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val chestPlate = p.inventory.chestplate
         if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) return
 
-        val previous = SavedChestplates.remove(p.uniqueId)
+        val previous = savedChestplates.remove(p.uniqueId)
 
         p.inventory.chestplate = previous
         p.playSound(p, Sound.BLOCK_BEACON_DEACTIVATE, 1.0F, 2.0F)
