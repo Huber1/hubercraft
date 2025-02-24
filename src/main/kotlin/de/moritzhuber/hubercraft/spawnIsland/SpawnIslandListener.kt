@@ -19,6 +19,7 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
 
+
 class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     private val ITEM_NAME: String = "Einwegelytra"
 
@@ -31,7 +32,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
     private val preventLevitateAchievementPlayers = mutableListOf<UUID>()
 
-    val savedChestplates = SavedChestplates()
+    val savedChestplates = SavedChestplates(plugin)
 
     @EventHandler
     fun onAdvancement(event: PlayerAdvancementCriterionGrantEvent) {
@@ -40,8 +41,8 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         if (event.criterion !in listOf("levitated", "elytra")) return
 
         when (event.criterion) {
-            "levitated" -> {
-                if (preventLevitateAchievementPlayers.contains(p.uniqueId)) event.isCancelled = true
+            "levitated" -> if (preventLevitateAchievementPlayers.contains(p.uniqueId)) {
+                event.isCancelled = true
             }
 
             "elytra" -> {
@@ -63,7 +64,10 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         if (ISLAND_LOCATION.world.key != p.world.key) return
 
         if (BOTTOM_LOCATION.distance(p.location) < BOTTOM_LEVITATE_DISTANCE) levitateToIsland(p)
-        else if (ISLAND_LOCATION.distance(p.location) < ISLAND_ELYTRA_DISTANCE) giveElytra(p)
+        else if (ISLAND_LOCATION.distance(p.location) < ISLAND_ELYTRA_DISTANCE) {
+            plugin.logger.info("Detected Player ${p.name} on Spawn Island")
+            giveElytra(p)
+        }
 
     }
 
@@ -74,11 +78,15 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
         val p = event.entity as Player
 
         // Stopped Gliding
-        if (!event.isGliding) removeElytra(p)
+        if (!event.isGliding) {
+            plugin.logger.info("Player ${p.name} stopped gliding. Removing Elytra")
+            removeElytra(p)
+        }
     }
 
     @EventHandler
     fun onDeath(event: PlayerDeathEvent) {
+        plugin.logger.info("Player ${event.player.name} died. Removing Elytra and Levitation Achievement Blocker")
         val p = event.player
         preventLevitateAchievementPlayers.remove(p.uniqueId)
         removeElytra(p)
@@ -89,8 +97,11 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
 
         // Check if SpawnElytra is already given
         if (chestPlate == null || (chestPlate.itemMeta.itemName() as TextComponent).content() != ITEM_NAME) {
-            if (chestPlate == null) p.inventory.chestplate = getElytra()
-            else {
+            if (chestPlate == null) {
+                plugin.logger.info("Giving an Elytra to Player ${p.name}")
+                p.inventory.chestplate = getElytra()
+            } else {
+                plugin.logger.info("Giving an Elytra to  Player ${p.name} replacing ${(chestPlate.itemMeta.displayName() as TextComponent).content()}")
                 savedChestplates.save(p.uniqueId, ItemStack(chestPlate))
                 p.inventory.chestplate = getElytra()
             }
@@ -126,6 +137,7 @@ class SpawnIslandListener(val plugin: JavaPlugin) : Listener {
     }
 
     private fun levitateToIsland(p: Player) {
+        plugin.logger.info("Levitating player ${p.name} to Spawn Island")
         p.removePotionEffect(PotionEffectType.LEVITATION)
         val levitation = PotionEffect(PotionEffectType.LEVITATION, 20 * 5, 25, false, false)
         p.addPotionEffect(levitation)

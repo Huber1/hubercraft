@@ -2,19 +2,21 @@ package de.moritzhuber.hubercraft.spawnIsland
 
 import kotlinx.coroutines.*
 import org.bukkit.inventory.ItemStack
+import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.util.*
 
 
-class SavedChestplates {
+class SavedChestplates(val plugin: JavaPlugin) {
     private lateinit var chestPlateData: MutableMap<UUID, ItemStack?>
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     private val file = File("hubercraft/chestplates.data")
 
     init {
+        plugin.logger.info("Loading saved Chestplates")
         runBlocking {
             loadFromDisk()
         }
@@ -35,6 +37,7 @@ class SavedChestplates {
     fun remove(uuid: UUID) = chestPlateData.remove(uuid)
 
     suspend fun persistToDisk() {
+        plugin.logger.info("Persisting saved Chestplates to Disk")
         val serialized: Map<UUID, ByteArray?> = chestPlateData.mapValues { it.value?.serializeAsBytes() }
 
         withContext(Dispatchers.IO) {
