@@ -9,7 +9,7 @@ import java.io.ObjectOutputStream
 import java.util.*
 
 
-class SavedChestplates(val plugin: JavaPlugin) {
+class SavedChestplates(private val plugin: JavaPlugin) {
     private lateinit var chestPlateData: MutableMap<UUID, ItemStack?>
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
