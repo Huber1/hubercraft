@@ -9,10 +9,12 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.entity.EntityToggleGlideEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.player.PlayerDropItemEvent
+import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.event.player.PlayerMoveEvent
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemRarity
@@ -24,11 +26,10 @@ import org.bukkit.potion.PotionEffect
 import org.bukkit.potion.PotionEffectType
 import java.util.*
 
-// TODO PersistentDataContainer instead of ItemName
 class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
     private val ELYTRA_KEY = NamespacedKey(plugin, "einwegelytra")
-    private val FIREWORK_KEY = NamespacedKey(plugin, "firework")
-    private val FIREWORK_SLOT = 4
+    private val BOOSTER_KEY = NamespacedKey(plugin, "elytraboost")
+    private val BOOSTER_SLOT = 4
 
     private val ISLAND_LOCATION = Location(Bukkit.getWorld(NamespacedKey.minecraft("overworld")), 0.5, 175.0, 0.5)
     private val ISLAND_ELYTRA_DISTANCE = 6
@@ -109,22 +110,43 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
     }
 
     /**
-     * Prevent dropping the spawn firework
+     * Prevent dropping the Booster
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onDrop(event: PlayerDropItemEvent) {
-        if (isFirework(event.itemDrop.itemStack) || isElytra(event.itemDrop.itemStack)) {
+        if (isBooster(event.itemDrop.itemStack) || isElytra(event.itemDrop.itemStack)) {
             event.isCancelled = true
         }
     }
 
     /**
-     * Prevent moving elytra and Firework
+     * Prevent moving elytra and booster in inventory
      */
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onInventoryMove(event: InventoryClickEvent) {
         val item = event.currentItem ?: return
-        if (isFirework(item) || isElytra(item)) event.isCancelled = true
+        if (isBooster(item) || isElytra(item)) event.isCancelled = true
+    }
+
+    /**
+     * Boost player
+     */
+    @EventHandler
+    fun onInteract(event: PlayerInteractEvent) {
+        if (
+            event.item != null
+            && isBooster(event.item!!)
+            && event.player.isGliding
+            && event.action == Action.RIGHT_CLICK_AIR
+        ) {
+            val firework = ItemStack(Material.FIREWORK_ROCKET)
+            val meta = firework.itemMeta as FireworkMeta
+            meta.power = 5
+            firework.itemMeta = meta
+            event.player.fireworkBoost(firework)
+            if (event.hand != null)
+                event.player.inventory.setItem(event.hand!!, null)
+        }
     }
 
     private fun levitateToIsland(p: Player) {
@@ -160,7 +182,7 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
             p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
         }
 
-        p.inventory.setItem(4, getFirework())
+        p.inventory.setItem(BOOSTER_SLOT, getBooster())
     }
 
     private fun removeSpawnItems(p: Player) {
@@ -177,8 +199,8 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
         val elytra = ItemStack(Material.ELYTRA)
 
         elytra.editMeta { meta ->
-            meta.displayName(Component.text("Einwegelytra"))
             meta.itemName(Component.text("Einwegelytra"))
+            meta.customName(Component.text("Einwegelytra"))
             meta.isUnbreakable = true
             meta.addEnchant(Enchantment.BINDING_CURSE, 1, true)
             meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true)
@@ -191,29 +213,27 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
         return elytra
     }
 
-    private fun getFirework(): ItemStack {
-        val firework = ItemStack(Material.FIREWORK_ROCKET)
-        val meta = firework.itemMeta as FireworkMeta
-
-        meta.displayName(Component.text("Einwegfeuerwerk"))
-        meta.itemName(Component.text("Einwegfeuerwerk"))
-        meta.lore(
-            listOf(
-                Component.text("Gibt nen ordentlichen Boost"),
-                Component.text("Kann nur für den ersten Flug verwendet werden")
+    private fun getBooster(): ItemStack = ItemStack(Material.FEATHER).let {
+        it.editMeta { meta ->
+            meta.itemName(Component.text("Booster"))
+            meta.customName(Component.text("Booster"))
+            meta.lore(
+                listOf(
+                    Component.text("Gibt nen ordentlichen Boost"),
+                )
             )
-        )
-        meta.setRarity(ItemRarity.EPIC)
-        meta.power = 5
+            meta.setRarity(ItemRarity.EPIC)
+            meta.setEnchantmentGlintOverride(true)
 
-        meta.persistentDataContainer.set(FIREWORK_KEY, PersistentDataType.BOOLEAN, true)
-        firework.itemMeta = meta
-        return firework
+            meta.persistentDataContainer.set(BOOSTER_KEY, PersistentDataType.BOOLEAN, true)
+        }
+
+        it
     }
 
     private fun isElytra(itemStack: ItemStack): Boolean =
         itemStack.persistentDataContainer.getOrDefault(ELYTRA_KEY, PersistentDataType.BOOLEAN, false)
 
-    private fun isFirework(itemStack: ItemStack): Boolean =
-        itemStack.persistentDataContainer.getOrDefault(FIREWORK_KEY, PersistentDataType.BOOLEAN, false)
+    private fun isBooster(itemStack: ItemStack): Boolean =
+        itemStack.persistentDataContainer.getOrDefault(BOOSTER_KEY, PersistentDataType.BOOLEAN, false)
 }
