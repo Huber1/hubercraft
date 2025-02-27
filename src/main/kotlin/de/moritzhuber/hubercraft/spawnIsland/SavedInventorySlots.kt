@@ -4,6 +4,7 @@ import de.moritzhuber.hubercraft.helper.serializer.ItemStackSerializer
 import de.moritzhuber.hubercraft.helper.serializer.UUIDSerializer
 import kotlinx.coroutines.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
@@ -24,7 +25,7 @@ class SavedInventorySlots(private val plugin: JavaPlugin) {
     private lateinit var chestPlateData: MutableMap<UUID, ItemStack?>
     private lateinit var boosterSlotData: MutableMap<UUID, ItemStack?>
 
-    private val file = File("hubercraft/chestplates.data")
+    private val file = File("hubercraft/chestplates.json")
 
     private val coroutineScope = CoroutineScope(Dispatchers.Default)
     private var job: Job? = null
@@ -78,8 +79,6 @@ class SavedInventorySlots(private val plugin: JavaPlugin) {
 
         val json = Json.encodeToString(data)
 
-        plugin.logger.warning(json)
-
         withContext(Dispatchers.IO) {
             file.parentFile.mkdirs()
             file.writeText(json)
@@ -91,12 +90,17 @@ class SavedInventorySlots(private val plugin: JavaPlugin) {
         plugin.logger.info("Restoring Spawn InventorySlots from Disk")
 
         if (file.exists()) {
-            val fileContent: String = withContext(Dispatchers.IO) {
-                file.readText()
+            try {
+                val fileContent: String = withContext(Dispatchers.IO) {
+                    file.readText()
+                }
+                val container = Json.decodeFromString<InventoryDataContainer>(fileContent)
+                chestPlateData = container.chestplateData
+                boosterSlotData = container.boosterSlotData
+            } catch (e: SerializationException) {
+                chestPlateData = mutableMapOf()
+                boosterSlotData = mutableMapOf()
             }
-            val container = Json.decodeFromString<InventoryDataContainer>(fileContent)
-            chestPlateData = container.chestplateData
-            boosterSlotData = container.boosterSlotData
         } else {
             chestPlateData = mutableMapOf()
             boosterSlotData = mutableMapOf()
