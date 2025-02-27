@@ -194,6 +194,7 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
                 savedInventorySlots.saveBooster(p.uniqueId, ItemStack(boosterSlot))
             }
             p.inventory.setItem(BOOSTER_SLOT, getBooster())
+            p.inventory.heldItemSlot = BOOSTER_SLOT
         }
     }
 
