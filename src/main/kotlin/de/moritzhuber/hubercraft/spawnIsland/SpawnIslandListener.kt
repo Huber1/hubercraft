@@ -40,7 +40,7 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
 
     private val preventLevitateAchievementPlayers = mutableListOf<UUID>()
 
-    val savedChestplates = SavedChestplates(plugin)
+    val savedInventorySlots = SavedInventorySlots(plugin)
 
     /**
      * Prevent Advancements because of the spawn area
@@ -77,7 +77,7 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
 
         if (BOTTOM_LOCATION.distance(p.location) < BOTTOM_LEVITATE_DISTANCE) levitateToIsland(p)
         else if (ISLAND_LOCATION.distance(p.location) < ISLAND_ELYTRA_DISTANCE) {
-            giveElytra(p)
+            giveSpawnItems(p)
         }
 
     }
@@ -131,21 +131,24 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
     /**
      * Boost player
      */
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     fun onInteract(event: PlayerInteractEvent) {
+        val p = event.player
         if (
             event.item != null
             && isBooster(event.item!!)
-            && event.player.isGliding
+            && p.isGliding
             && event.action == Action.RIGHT_CLICK_AIR
         ) {
             val firework = ItemStack(Material.FIREWORK_ROCKET)
             val meta = firework.itemMeta as FireworkMeta
             meta.power = 5
             firework.itemMeta = meta
-            event.player.fireworkBoost(firework)
-            if (event.hand != null)
-                event.player.inventory.setItem(event.hand!!, null)
+            p.fireworkBoost(firework)
+            plugin.server.scheduler.runTask(plugin, Runnable {
+                val previousBooster = savedInventorySlots.removeBooster(p.uniqueId)
+                p.inventory.setItem(BOOSTER_SLOT, previousBooster)
+            })
         }
     }
 
@@ -166,33 +169,51 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
         }, BOTTOM_LEVITATE_DURATION)
     }
 
-    private fun giveElytra(p: Player) {
+    private fun giveSpawnItems(p: Player) {
         val chestPlate = p.inventory.chestplate
+        val boosterSlot = p.inventory.getItem(BOOSTER_SLOT)
 
-        // Check if SpawnElytra is already given
+        // Elytra
         if (chestPlate == null || !isElytra(chestPlate)) {
             if (chestPlate == null) {
                 plugin.logger.info("Giving an Elytra to Player ${p.name}")
-                p.inventory.chestplate = getElytra()
             } else {
                 plugin.logger.info("Giving an Elytra to  Player ${p.name} replacing ${chestPlate.itemMeta.javaClass.simpleName}")
-                savedChestplates.save(p.uniqueId, ItemStack(chestPlate))
-                p.inventory.chestplate = getElytra()
+                savedInventorySlots.saveChestplate(p.uniqueId, ItemStack(chestPlate))
             }
+            p.inventory.chestplate = getElytra()
             p.playSound(p, Sound.BLOCK_BEACON_ACTIVATE, 1.0F, 2.0F)
         }
 
-        p.inventory.setItem(BOOSTER_SLOT, getBooster())
+        // Booster
+        if (boosterSlot == null || !isBooster(boosterSlot)) {
+            if (boosterSlot == null) {
+                plugin.logger.info("Giving Booster to Player ${p.name}")
+            } else {
+                plugin.logger.info("Giving Booster to  Player ${p.name} replacing ${boosterSlot.itemMeta.javaClass.simpleName}")
+                savedInventorySlots.saveBooster(p.uniqueId, ItemStack(boosterSlot))
+            }
+            p.inventory.setItem(BOOSTER_SLOT, getBooster())
+        }
     }
 
     private fun removeSpawnItems(p: Player) {
         val chestPlate = p.inventory.chestplate
-        if (chestPlate == null || !isElytra(chestPlate)) return
+        val booster = p.inventory.getItem(BOOSTER_SLOT)
+        if (chestPlate == null && booster == null) return
 
-        val previous = savedChestplates.remove(p.uniqueId)
+        // Elytra
+        if (chestPlate != null && isElytra(chestPlate)) {
+            val previous = savedInventorySlots.removeChestplate(p.uniqueId)
+            p.inventory.chestplate = previous
+            p.playSound(p, Sound.BLOCK_BEACON_DEACTIVATE, 1.0F, 2.0F)
+        }
 
-        p.inventory.chestplate = previous
-        p.playSound(p, Sound.BLOCK_BEACON_DEACTIVATE, 1.0F, 2.0F)
+        // Booster
+        if (booster != null && isBooster(booster)) {
+            val previous = savedInventorySlots.removeBooster(p.uniqueId)
+            p.inventory.setItem(BOOSTER_SLOT, previous)
+        }
     }
 
     private fun getElytra(): ItemStack {
@@ -220,6 +241,7 @@ class SpawnIslandListener(private val plugin: JavaPlugin) : Listener {
             meta.lore(
                 listOf(
                     Component.text("Gibt nen ordentlichen Boost"),
+                    Component.text("Keine Sorge, du kriegst dein Item zurück")
                 )
             )
             meta.setRarity(ItemRarity.EPIC)
