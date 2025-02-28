@@ -1,0 +1,4 @@
+<gold>Willkommen auf <red>Hubercraft</red>!
+Bitte lies dir kurz die Regeln durch: <red><click:run_command:'/rules'>/rules</click></red>
+Discord: <red><click:open_url:'https://discord.gg/HRHp5XMR'>https://discord.gg/HRHp5XMR</click></red>
+Online-Map: <red><click:open_url:'https://huber.party'>https://huber.party</click></red>

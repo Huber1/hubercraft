@@ -1,0 +1,2 @@
+<gold>Willkommen zurück, <red><name></red>!
+Aktuell <red><players-online></red> Spieler online

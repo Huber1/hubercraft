@@ -2,6 +2,7 @@ package de.moritzhuber.hubercraft
 
 import de.moritzhuber.hubercraft.beaconFly.BeaconFlyListener
 import de.moritzhuber.hubercraft.commands.mapCommand
+import de.moritzhuber.hubercraft.motd.PlayerJoinListener
 import de.moritzhuber.hubercraft.spawnIsland.SpawnIslandListener
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import kotlinx.coroutines.runBlocking
@@ -23,6 +24,7 @@ class Hubercraft : JavaPlugin() {
         val pluginManager = server.pluginManager
         pluginManager.registerEvents(BeaconFlyListener(), this)
         pluginManager.registerEvents(spawnIslandListener, this)
+        pluginManager.registerEvents(PlayerJoinListener(this), this)
     }
 
     @Suppress("UnstableApiUsage")
@@ -30,6 +32,10 @@ class Hubercraft : JavaPlugin() {
         lifecycleManager.registerEventHandler(LifecycleEvents.COMMANDS) { commands ->
             commands.registrar().register(mapCommand())
         }
+    }
+
+    private fun copyMissingResources() {
+        dataFolder.mkdir()
     }
 
     override fun onDisable() = runBlocking {
