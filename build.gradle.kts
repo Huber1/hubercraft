@@ -15,6 +15,9 @@ repositories {
     maven("https://oss.sonatype.org/content/groups/public/") {
         name = "sonatype"
     }
+    maven("https://repo.essentialsx.net/releases/") {
+        name = "essentials"
+    }
 }
 
 dependencies {
@@ -22,6 +25,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    compileOnly("net.essentialsx:EssentialsX:2.20.1")
 }
 
 val targetJavaVersion = 21
