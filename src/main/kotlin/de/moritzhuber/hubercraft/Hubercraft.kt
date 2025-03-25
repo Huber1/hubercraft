@@ -4,10 +4,12 @@ import de.moritzhuber.hubercraft.beaconFly.BeaconFlyListener
 import de.moritzhuber.hubercraft.commands.devmodeCommand
 import de.moritzhuber.hubercraft.commands.mapCommand
 import de.moritzhuber.hubercraft.devmode.DevmodeListener
+import de.moritzhuber.hubercraft.recipes.LogChestRecipe
 import de.moritzhuber.hubercraft.spawnIsland.SpawnIslandListener
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import kotlinx.coroutines.runBlocking
 import org.bukkit.plugin.java.JavaPlugin
+
 
 class Hubercraft : JavaPlugin() {
 
@@ -25,6 +27,7 @@ class Hubercraft : JavaPlugin() {
 
         registerEvents()
         registerCommands()
+        registerRecipes()
     }
 
     private fun registerEvents() {
@@ -40,6 +43,10 @@ class Hubercraft : JavaPlugin() {
             commands.registrar().register(mapCommand())
             commands.registrar().register(devmodeCommand())
         }
+    }
+
+    private fun registerRecipes() {
+        server.addRecipe(LogChestRecipe(this))
     }
 
     override fun onDisable() = runBlocking {
