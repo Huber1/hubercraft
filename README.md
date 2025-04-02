@@ -1,6 +1,6 @@
 # Hubercraft Plugin
 
-A papermc plugin for the Hubercraft server on [huber.party](huber.party)
+A papermc plugin for the Hubercraft server on [huber.party](https://huber.party)
 
 ## Features
 
